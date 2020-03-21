@@ -1,0 +1,55 @@
+Data Set have been taken from the Tensor-flow data set's 
+
+My first challenge was finding a good training dataset. Traffic sign recognition is a well studied
+problem, so I figured I’ll find something online.
+
+I started by googling “traffic sign dataset” and found several options. I picked the Belgian Traffic Sign
+Dataset because it was big enough to train on, and yet small enough to be easy to work with.
+
+You can download the dataset from http://btsd.ethz.ch/shareddata/. There are a lot of datasets on that page, but you only 
+need the two files listed under BelgiumTS for Classification (cropped images):
+
+BelgiumTSC_Training (171.3MBytes)
+
+BelgiumTSC_Testing (76.5MBytes)
+
+After expanding the files, this is my directory structure. Try to match it so you can run the code without having to change the paths:
+
+/traffic/datasets/BelgiumTS/Training/ /traffic/datasets/BelgiumTS/Testing/
+Each of the two directories contain 62 subdirectories, named sequentially from 00000 to 00061. The directory names represent the 
+labels, and the images inside each directory are samples of each label.
+
+Exploring the Dataset :
+
+
+Or, if you prefer to sound more formal: do Exploratory Data Analysis. It’s tempting to skip this part, but I’ve found that the code I write to examine the data ends up being used a lot throughout the project. I usually do this in Jupyter notebooks and share them with the team. Knowing your data well from the start saves you a lot of time later.
+The images in this dataset are in an old .ppm format. So old, in fact, that most tools don’t support it. Which meant that I couldn’t casually browse the folders to take a look at the images. Luckily, the Scikit Image library recognizes this format. This code will load the data and return two lists: images and labels.
+def load_data(data_dir):
+
+    # Get all subdirectories of data_dir. Each represents a label.
+    directories = [d for d in os.listdir(data_dir) 
+                   if os.path.isdir(os.path.join(data_dir, d))]
+    # Loop through the label directories and collect the data in
+    # two lists, labels and images.
+    labels = []
+    images = []
+    for d in directories:
+        label_dir = os.path.join(data_dir, d)
+        file_names = [os.path.join(label_dir, f) 
+                      for f in os.listdir(label_dir) 
+                      if f.endswith(".ppm")]
+        for f in file_names:
+            images.append(skimage.data.imread(f))
+            labels.append(int(d))
+    return images, labels
+
+images, labels = load_data(train_data_dir)
+
+This is a small dataset so I’m loading everything into RAM to keep it simple. For larger datasets, you’d want to load the data in batches.
+After loading the images into Numpy arrays, I display a sample image of each label. See code in the notebook. This is our dataset:
+
+
+The training set. consists of 62 classes. The numbers in parentheses are the count of images of each class.
+
+Looks like a good training set. The image quality is great, and there are a variety of angles and lighting conditions. More importantly, the traffic signs occupy most of the area of each image, which allows me to focus on object classification and not have to worry about finding the location of the traffic sign in the image (object detection). I’ll get to object detection in a future post.
+The first thing I noticed from the samples above is that images are square-ish, but have different aspect ratios. My neural network will take a fixed-size input, so I have some preprocessing to do. I’ll get to that soon, but first let’s pick one label and see more of its images.
